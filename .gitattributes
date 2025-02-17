@@ -1,0 +1,1 @@
+git[[:space:]]branch[[:space:]]-D[[:space:]]main filter=lfs diff=lfs merge=lfs -text
