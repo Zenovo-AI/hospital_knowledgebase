@@ -164,7 +164,7 @@ def process_web_links():
 def main():
     logging.getLogger("root").setLevel(logging.CRITICAL)
 
-    st.title("Proposal and Chatbot System")
+    st.title("Health Policy APP")
     st.write("Upload a document and ask questions based on structured knowledge retrieval.")
 
     initialize_session_state()
