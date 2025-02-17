@@ -49,7 +49,7 @@ class RAGFactory:
         """Create a LightRAG instance with shared configuration"""
         return LightRAG(
             working_dir=working_dir,
-            addon_params={"insert_batch_size": 10},
+            addon_params={"insert_batch_size": 50},
             llm_model_func=gpt_4o_mini_complete,
             embedding_func=cls._shared_embedding
         )
