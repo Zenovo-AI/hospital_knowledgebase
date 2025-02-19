@@ -1,4 +1,3 @@
-import json
 import logging
 from pathlib import Path
 import sqlite3
@@ -163,25 +162,47 @@ def process_web_links():
 
 def main():
     logging.getLogger("root").setLevel(logging.CRITICAL)
+    
+    st.set_page_config(page_title="Hospital Policy Search", layout="wide")
+    admin_password = st.secrets["ADMIN_PASSWORD"]
+
+    # Sidebar: Admin Mode
+    st.sidebar.title("Admin Panel")
+    admin_mode = st.sidebar.checkbox("Enable Admin Mode")
+    admin_authenticated = False
+
+    if admin_mode:
+        password = st.sidebar.text_input("Enter Admin Password", type="password")
+        if password == admin_password:
+            admin_authenticated = True
+            st.sidebar.success("Admin authenticated")
+        else:
+            st.sidebar.error("Incorrect password!")
 
     st.title("Health Policy APP")
     st.write("Upload a document and ask questions based on structured knowledge retrieval.")
 
     initialize_session_state()
-
-    # File uploader widget
-    files = st.sidebar.file_uploader("Upload documents", accept_multiple_files=True, type=["pdf", "txt"])
-
-    # Store uploaded file name in session state
-    for file in files:
-        st.session_state["file_name"] = file.name
-
-    # Web links input
-    web_links = st.sidebar.text_area("Enter web links (one per line)", key="web_links", on_change=process_web_links)
     
-    # Ensure files_processed is in session state
     if "files_processed" not in st.session_state:
         st.session_state["files_processed"] = False
+
+    files = None  # Ensure files is always defined
+    web_links = None  # Ensure web_links is always defined
+
+    if admin_authenticated:
+        st.sidebar.subheader("Upload New Documents")
+
+        # File uploader widget
+        files = st.sidebar.file_uploader("Upload documents", accept_multiple_files=True, type=["pdf", "txt"])
+
+        # Store uploaded file name in session state
+        if files:
+            for file in files:
+                st.session_state["file_name"] = file.name
+
+        # Web links input
+        web_links = st.sidebar.text_area("Enter web links (one per line)", key="web_links", on_change=process_web_links)
 
     # Sidebar: Retrieval mode selection
     st.session_state.search_mode = st.sidebar.selectbox(
