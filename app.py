@@ -65,7 +65,7 @@ def generate_answer():
             working_dir = Path("./analysis_workspace")
             working_dir.mkdir(parents=True, exist_ok=True)
             rag = RAGFactory.create_rag(str(working_dir))
-            response = rag.query(query, QueryParam(mode=st.session_state.search_mode))
+            response = rag.query(query, QueryParam(mode="hybrid"))
 
             # Store in chat history
             st.session_state.chat_history.append(("You", query))
@@ -203,11 +203,6 @@ def main():
 
         # Web links input
         web_links = st.sidebar.text_area("Enter web links (one per line)", key="web_links", on_change=process_web_links)
-
-    # Sidebar: Retrieval mode selection
-    st.session_state.search_mode = st.sidebar.selectbox(
-        "Select retrieval mode", ["local", "global", "hybrid", "mix"], key="mode_selection"
-    )
 
     # Process files and links if present
     if (files or web_links) and not st.session_state["files_processed"]:
