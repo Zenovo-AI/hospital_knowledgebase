@@ -14,17 +14,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 class DocumentProcessor:
-    SECTION_KEYWORDS = {
-        "Request for Proposal (RFP) Document",
-        "Terms of Reference (ToR)",
-        "Technical Evaluation Criteria",
-        "Company and Team Profiles",
-        "Environmental and Social Standards",
-        "Project History and Relevant Experience",
-        "Budget and Financial Documents",
-        "Additional Requirements and Compliance Documents"
-    }
-
     # Helper function to read text from a TXT file
     def extract_txt_content(self, file_path):
         try:

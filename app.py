@@ -5,7 +5,7 @@ import time
 import numpy as np
 import streamlit as st
 from lightrag import LightRAG, QueryParam
-from lightrag.llm.openai import openai_embed, gpt_4o_complete, gpt_4o_mini_complete
+from lightrag.llm.openai import openai_embed, gpt_4o_complete
 from lightrag.utils import EmbeddingFunc
 from db_helper import check_if_file_exists, check_working_directory, delete_file, initialize_database
 from inference import process_files_and_links
@@ -49,7 +49,7 @@ class RAGFactory:
         return LightRAG(
             working_dir=working_dir,
             addon_params={"insert_batch_size": 50},
-            llm_model_func=gpt_4o_mini_complete,
+            llm_model_func=gpt_4o_complete,
             embedding_func=cls._shared_embedding
         )
 
