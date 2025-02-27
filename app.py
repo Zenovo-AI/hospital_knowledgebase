@@ -289,7 +289,7 @@ def process_web_links():
 def main():
     logging.getLogger("root").setLevel(logging.CRITICAL)
     
-    st.set_page_config(page_title="Hospital Policy Search", layout="wide")
+    # st.set_page_config(page_title="Hospital Policy Search", layout="wide")
     admin_password = st.secrets["ADMIN_PASSWORD"]
 
     # Sidebar: Admin Mode
