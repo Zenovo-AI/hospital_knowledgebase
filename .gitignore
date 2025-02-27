@@ -171,6 +171,8 @@ LightRAG/
 temp_files/
 analysis_workspace/
 files.db
+documents/
+faiss_index/
 
 data/
 =======

@@ -6,13 +6,37 @@ import numpy as np
 import streamlit as st
 from lightrag import LightRAG, QueryParam
 from lightrag.llm.openai import openai_embed, gpt_4o_complete
+from langchain_openai import OpenAI
 from lightrag.utils import EmbeddingFunc
 from db_helper import check_if_file_exists, check_working_directory, delete_file, initialize_database
-from inference import process_files_and_links
+from inference import process_files_and_links, load_or_create_faiss_index, retrieve_answers, clear_faiss_index
 from googleapiclient.discovery import build
 from streamlit_js import st_js, st_js_blocking
 from google_auth_oauthlib.flow import Flow
 import logging
+from langchain_openai import OpenAIEmbeddings
+from document_processor import handle_file_upload
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import OpenAIEmbeddings
+
+
+# Initialize FAISS in-memory
+embeddings = OpenAIEmbeddings()
+FAISS_INDEX_PATH = Path("faiss_index")
+
+def load_faiss_index():
+    if FAISS_INDEX_PATH.exists():
+        return FAISS.load_local(
+            str(FAISS_INDEX_PATH), 
+            embeddings, 
+            allow_dangerous_deserialization=True  # Enable safe loading
+        )
+    return None
+
+
+def save_faiss_index(vector_store):
+    vector_store.save_local(str(FAISS_INDEX_PATH))
+
 
 
 def initialize_session_state():
@@ -21,6 +45,10 @@ def initialize_session_state():
     if "initialized" not in st.session_state:
         initialize_database()
         st.session_state.initialized = True
+    if "uploaded_files" not in st.session_state:
+        st.session_state.uploaded_files = []
+    if "files_processed" not in st.session_state:
+        st.session_state["files_processed"] = False
 
 
 def embedding_func(texts: list[str]) -> np.ndarray:
@@ -54,6 +82,90 @@ class RAGFactory:
         )
 
 
+def generate_explicit_query(query):
+    """Expands the user query into a detailed and structured response format, incorporating key legal and procedural considerations."""
+    llm = OpenAI(temperature=0.7)
+
+    prompt = f"""
+    Given the following user query:
+
+    **"{query}"**
+
+    **Instructions:**  
+    1. Expand this query into a detailed and explicit version that captures all necessary context, specifications, and considerations.  
+    2. Ensure the expanded query covers key aspects relevant to the topic, including legal, procedural, technical, or business-related details.  
+    3. Incorporate the designation of representatives, ensuring clarity on roles, responsibilities, and authority in contractual or regulatory contexts.  
+    4. If applicable, ensure compliance with **HIPAA regulations**, emphasizing data privacy, security measures, and handling of sensitive information.  
+    5. Structure the response into the following standardized format:  
+
+    ---
+    **1. Summary**  
+    - Provide a concise overview of the query, outlining the core issue, objective, or request.  
+
+    **2. Key Considerations**  
+    - Identify important factors, regulations, constraints, or technical requirements that influence the response.  
+    - Clarify the designation of representatives, including roles, responsibilities, and authority delegation.  
+    - Ensure compliance with HIPAA regulations, where applicable, covering patient data protection, access control, and confidentiality agreements.  
+
+    **3. Possible Actions**  
+    - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
+
+    **4. Potential Challenges & Solutions**  
+    - Highlight possible obstacles and suggest ways to mitigate them.  
+
+    **5. Supporting Information (if applicable)**  
+    - Include any relevant references, compliance requirements, or best practices that support the response.  
+
+    ---
+    **Example:**  
+
+    **User Query:** "How do I draft a service contract?"  
+
+    **Expanded Query:**  
+    "What are the essential components of a legally binding service contract, including clauses for scope of work, payment terms, liability, termination, and dispute resolution? How should the contract be structured to comply with relevant laws and industry standards? What are the designated representatives' roles and responsibilities in signing and executing the contract? If handling sensitive healthcare data, how should the contract comply with HIPAA regulations to ensure confidentiality and security?"  
+
+    **Structured Response:**  
+
+    **1. Summary:**  
+    A service contract should clearly define the obligations of both parties, including deliverables, timelines, and compensation, ensuring legal protection for all involved.  
+
+    **2. Key Considerations:**  
+    - The contract must outline clear payment terms and dispute resolution procedures.  
+    - It should comply with applicable contract law and industry-specific regulations.  
+    - Designated representatives must be identified, including their authority and decision-making responsibilities.  
+    - If handling protected health information (PHI), the contract must include HIPAA compliance terms, such as data security measures, authorized access controls, and Business Associate Agreements (BAA).  
+
+    **3. Recommended Actions:**  
+    - Identify the core services and draft a detailed scope of work.  
+    - Specify payment schedules, including advance payments and penalties for late fees.  
+    - Include a termination clause detailing notice periods and conditions for cancellation.  
+    - Clearly outline the roles of designated representatives in contract execution.  
+    - If relevant, ensure the agreement meets HIPAA privacy and security rules.  
+
+    **4. Potential Challenges & Solutions:**  
+    - **Challenge:** Unclear expectations leading to disputes.  
+      **Solution:** Use precise language to avoid ambiguity.  
+    - **Challenge:** Non-payment issues.  
+      **Solution:** Include clauses for late fees or arbitration.  
+    - **Challenge:** Unauthorized handling of sensitive health data.  
+      **Solution:** Implement strict HIPAA-compliant data access policies and encryption.  
+
+    **5. Supporting Information:**  
+    - Reference standard contract templates from the legal department or industry guidelines.  
+    - Review HIPAA compliance checklists for handling patient data.  
+
+    ---
+    Now, generate an explicit query and structured response for:  
+
+    **"{query}"**  
+    """
+
+    response = llm.invoke(prompt)
+    return response.strip()
+
+
+
+
 def generate_answer():
     """Generates an answer when the user enters a query and presses Enter."""
     query = st.session_state.query_input  # Get user query from session state
@@ -61,15 +173,29 @@ def generate_answer():
         return  # Do nothing if query is empty
 
     with st.spinner("Generating answer..."):
+        expanded_queries = generate_explicit_query(query)
+        st.write(expanded_queries)
         try:
-            working_dir = Path("./analysis_workspace")
-            working_dir.mkdir(parents=True, exist_ok=True)
-            rag = RAGFactory.create_rag(str(working_dir))
-            response = rag.query(query, QueryParam(mode="hybrid"))
+            # working_dir = Path("./analysis_workspace")
+            # working_dir.mkdir(parents=True, exist_ok=True)
+            # rag = RAGFactory.create_rag(str(working_dir))
+            # response = rag.query(expanded_queries, QueryParam(mode="hybrid"))
+            answer = retrieve_answers(expanded_queries)
+            if answer:
+                # response = answer["answer"]
+                source = answer["sources"]
+                
+                if isinstance(source, list):
+                    formatted_sources = "\n".join(f"{i+1}. {src}" for i, src in enumerate(source))
+                elif isinstance(source, str):
+                    formatted_sources = "\n".join(f"{i+1}. {src}" for i, src in enumerate(source.split(",")))
+                else:
+                    formatted_sources = "No sources found."
 
             # Store in chat history
             st.session_state.chat_history.append(("You", query))
-            st.session_state.chat_history.append(("Bot", response))
+            # st.session_state.chat_history.append(("Bot", response))
+            st.session_state.chat_history.append(("Source", formatted_sources))
         except Exception as e:
             st.error(f"Error retrieving response: {e}")
 
@@ -87,6 +213,7 @@ def process_web_links():
         placeholder.empty()
 
         process_files_and_links([], web_links.split("\n"))  # Convert to list
+        handle_file_upload([], web_links)
         st.session_state["files_processed"] = True
         placeholder = st.empty()
         placeholder.write("✅ Web links processed!")
@@ -163,7 +290,7 @@ def process_web_links():
 def main():
     logging.getLogger("root").setLevel(logging.CRITICAL)
     
-    st.set_page_config(page_title="Hospital Policy Search", layout="wide")
+    # st.set_page_config(page_title="Hospital Policy Search", layout="wide")
     admin_password = st.secrets["ADMIN_PASSWORD"]
 
     # Sidebar: Admin Mode
@@ -184,11 +311,15 @@ def main():
 
     initialize_session_state()
     
+    DOCUMENTS_DIR = Path('documents')
+    DOCUMENTS_DIR.mkdir(parents=True, exist_ok=True)
+    
     if "files_processed" not in st.session_state:
         st.session_state["files_processed"] = False
 
     files = None  # Ensure files is always defined
     web_links = None  # Ensure web_links is always defined
+    vector_store = load_faiss_index()
 
     if admin_authenticated:
         st.sidebar.subheader("Upload New Documents")
@@ -203,32 +334,51 @@ def main():
 
         # Web links input
         web_links = st.sidebar.text_area("Enter web links (one per line)", key="web_links", on_change=process_web_links)
+        
+        if st.sidebar.button("Reset FAISS Index"):
+            if FAISS_INDEX_PATH.exists() and FAISS_INDEX_PATH.is_dir():
+                import shutil
+                shutil.rmtree(FAISS_INDEX_PATH)
 
     # Process files and links if present
     if (files or web_links) and not st.session_state["files_processed"]:
         if files:  # Process files if available
             for file in files:
                 file_name = file.name
-                file_in_db = check_if_file_exists(file_name)
-                dir_exists = check_working_directory(file_name)
+                # file_in_db = check_if_file_exists(file_name)
+                # dir_exists = check_working_directory(file_name)
 
-                if file_in_db and dir_exists:
-                    placeholder = st.empty()
-                    placeholder.warning(f"⚠️ The file '{file_name}' has already been processed.")
-                    time.sleep(5)
-                    placeholder.empty()
+                # if file_in_db and dir_exists:
+                #     placeholder = st.empty()
+                #     placeholder.warning(f"⚠️ The file '{file_name}' has already been processed.")
+                #     time.sleep(5)
+                #     placeholder.empty()
+                # else:
+                placeholder = st.empty()
+                placeholder.write("🔄 Processing files and links...")
+                time.sleep(5)
+                placeholder.empty()
+
+                # process_files_and_links(files, web_links)
+                document = handle_file_upload(files, web_links, DOCUMENTS_DIR)
+        
+                if document:
+                    if vector_store is None:
+                        vector_store = load_or_create_faiss_index(document)
+                    else:
+                        vector_store.add_texts(
+                            texts=[doc.page_content for doc in document],
+                            metadatas=[{"source": doc.metadata.get("source", "Unknown")} for doc in document]
+                        )
+                    save_faiss_index(vector_store)
+                    st.sidebar.success("✅ Document uploaded successfully!")
                 else:
-                    placeholder = st.empty()
-                    placeholder.write("🔄 Processing files and links...")
-                    time.sleep(5)
-                    placeholder.empty()
+                    st.error("❌ Failed to process the document.")
+                st.session_state["files_processed"] = True
 
-                    process_files_and_links(files, web_links)
-                    st.session_state["files_processed"] = True
-
-                    placeholder.write("✅ Files and links processed!")
-                    time.sleep(5)
-                    placeholder.empty()
+                placeholder.write("✅ Files and links processed!")
+                time.sleep(5)
+                placeholder.empty()
 
         elif web_links:  # Process web links even if no files are uploaded
             placeholder = st.empty()
@@ -236,7 +386,7 @@ def main():
             time.sleep(5)
             placeholder.empty()
 
-            process_files_and_links([], web_links.split("\n"))  # Convert to list
+            # process_files_and_links([], web_links.split("\n"))  # Convert to list
             st.session_state["files_processed"] = True
 
             placeholder.write("✅ Web links processed!")
