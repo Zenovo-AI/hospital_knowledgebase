@@ -359,7 +359,7 @@ def main():
                     time.sleep(5)
                     placeholder.empty()
 
-                    # process_files_and_links(files, web_links)
+                    process_files_and_links(files, web_links)
                     document = handle_file_upload(files, web_links, DOCUMENTS_DIR)
             
                     if document:
