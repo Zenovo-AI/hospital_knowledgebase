@@ -111,54 +111,53 @@ def handle_file_upload(uploaded_files, web_links, documents_dir: Path):
     placeholder = st.empty()
     
     try:
-        with st.spinner("Processing Document"):
-            processed_documents = []
+        processed_documents = []
 
-            # Process uploaded files
-            for uploaded_file in uploaded_files:
-                file_path = documents_dir / uploaded_file.name
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+        # Process uploaded files
+        for uploaded_file in uploaded_files:
+            file_path = documents_dir / uploaded_file.name
+            with open(file_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
 
-                documents = []  # List to store chunked documents
+            documents = []  # List to store chunked documents
 
-                # Process PDF files
-                if uploaded_file.type == 'application/pdf':
-                    documents = extract_text_from_pdf(file_path)  # Returns a list of Document objects
+            # Process PDF files
+            if uploaded_file.type == 'application/pdf':
+                documents = extract_text_from_pdf(file_path)  # Returns a list of Document objects
 
-                # Process Text files
-                elif uploaded_file.type == 'text/plain':
-                    text = uploaded_file.getvalue().decode("utf-8")
-                    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-                    chunks = text_splitter.split_text(text)
-                    documents = [Document(page_content=chunk, metadata={"source": uploaded_file.name}) for chunk in chunks]
+            # Process Text files
+            elif uploaded_file.type == 'text/plain':
+                text = uploaded_file.getvalue().decode("utf-8")
+                text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+                chunks = text_splitter.split_text(text)
+                documents = [Document(page_content=chunk, metadata={"source": uploaded_file.name}) for chunk in chunks]
 
-                else:
-                    placeholder.error(f"Unsupported file type: {uploaded_file.type}")
-                    continue  # Skip this file
-                
-                # Iterate over chunked documents
-                for doc in documents:
-                    processed_documents.append(doc)  # Append each chunk separately
-
-            # Process web links
-            for url in web_links:
-                url = url.strip()
-                if not url:
-                    continue  # Skip empty lines
-                try:
-                    documents = extract_text_from_url(url)  # Returns a list of Document objects
-
-                    for doc in documents:  
-                        processed_documents.append(doc)  # Append each document separately
-
-                except Exception as e:
-                    placeholder.error(f"Failed to process {url}: {str(e)}")
-
-            time.sleep(5)
-            placeholder.empty()
+            else:
+                placeholder.error(f"Unsupported file type: {uploaded_file.type}")
+                continue  # Skip this file
             
-            return processed_documents  # Return all processed documents
+            # Iterate over chunked documents
+            for doc in documents:
+                processed_documents.append(doc)  # Append each chunk separately
+
+        # Process web links
+        for url in web_links:
+            url = url.strip()
+            if not url:
+                continue  # Skip empty lines
+            try:
+                documents = extract_text_from_url(url)  # Returns a list of Document objects
+
+                for doc in documents:  
+                    processed_documents.append(doc)  # Append each document separately
+
+            except Exception as e:
+                placeholder.error(f"Failed to process {url}: {str(e)}")
+
+        time.sleep(5)
+        placeholder.empty()
+        
+        return processed_documents  # Return all processed documents
         
     except Exception as e:
         placeholder.error(f"An error occurred: {str(e)}")

@@ -176,10 +176,10 @@ def generate_answer():
         expanded_queries = generate_explicit_query(query)
         st.write(expanded_queries)
         try:
-            # working_dir = Path("./analysis_workspace")
-            # working_dir.mkdir(parents=True, exist_ok=True)
-            # rag = RAGFactory.create_rag(str(working_dir))
-            # response = rag.query(expanded_queries, QueryParam(mode="hybrid"))
+            working_dir = Path("./analysis_workspace")
+            working_dir.mkdir(parents=True, exist_ok=True)
+            rag = RAGFactory.create_rag(str(working_dir))
+            response = rag.query(expanded_queries, QueryParam(mode="hybrid"))
             answer = retrieve_answers(expanded_queries)
             if answer:
                 # response = answer["answer"]
@@ -194,7 +194,7 @@ def generate_answer():
 
             # Store in chat history
             st.session_state.chat_history.append(("You", query))
-            # st.session_state.chat_history.append(("Bot", response))
+            st.session_state.chat_history.append(("Bot", response))
             st.session_state.chat_history.append(("Source", formatted_sources))
         except Exception as e:
             st.error(f"Error retrieving response: {e}")
@@ -345,40 +345,40 @@ def main():
         if files:  # Process files if available
             for file in files:
                 file_name = file.name
-                # file_in_db = check_if_file_exists(file_name)
-                # dir_exists = check_working_directory(file_name)
+                file_in_db = check_if_file_exists(file_name)
+                dir_exists = check_working_directory(file_name)
 
-                # if file_in_db and dir_exists:
-                #     placeholder = st.empty()
-                #     placeholder.warning(f"⚠️ The file '{file_name}' has already been processed.")
-                #     time.sleep(5)
-                #     placeholder.empty()
-                # else:
-                placeholder = st.empty()
-                placeholder.write("🔄 Processing files and links...")
-                time.sleep(5)
-                placeholder.empty()
-
-                # process_files_and_links(files, web_links)
-                document = handle_file_upload(files, web_links, DOCUMENTS_DIR)
-        
-                if document:
-                    if vector_store is None:
-                        vector_store = load_or_create_faiss_index(document)
-                    else:
-                        vector_store.add_texts(
-                            texts=[doc.page_content for doc in document],
-                            metadatas=[{"source": doc.metadata.get("source", "Unknown")} for doc in document]
-                        )
-                    save_faiss_index(vector_store)
-                    st.sidebar.success("✅ Document uploaded successfully!")
+                if file_in_db and dir_exists:
+                    placeholder = st.empty()
+                    placeholder.warning(f"⚠️ The file '{file_name}' has already been processed.")
+                    time.sleep(5)
+                    placeholder.empty()
                 else:
-                    st.error("❌ Failed to process the document.")
-                st.session_state["files_processed"] = True
+                    placeholder = st.empty()
+                    placeholder.write("🔄 Processing files and links...")
+                    time.sleep(5)
+                    placeholder.empty()
 
-                placeholder.write("✅ Files and links processed!")
-                time.sleep(5)
-                placeholder.empty()
+                    # process_files_and_links(files, web_links)
+                    document = handle_file_upload(files, web_links, DOCUMENTS_DIR)
+            
+                    if document:
+                        if vector_store is None:
+                            vector_store = load_or_create_faiss_index(document)
+                        else:
+                            vector_store.add_texts(
+                                texts=[doc.page_content for doc in document],
+                                metadatas=[{"source": doc.metadata.get("source", "Unknown")} for doc in document]
+                            )
+                        save_faiss_index(vector_store)
+                        st.sidebar.success("✅ Document uploaded successfully!")
+                    else:
+                        st.error("❌ Failed to process the document.")
+                    st.session_state["files_processed"] = True
+
+                    placeholder.write("✅ Files and links processed!")
+                    time.sleep(5)
+                    placeholder.empty()
 
         elif web_links:  # Process web links even if no files are uploaded
             placeholder = st.empty()
@@ -386,7 +386,7 @@ def main():
             time.sleep(5)
             placeholder.empty()
 
-            # process_files_and_links([], web_links.split("\n"))  # Convert to list
+            process_files_and_links([], web_links.split("\n"))  # Convert to list
             st.session_state["files_processed"] = True
 
             placeholder.write("✅ Web links processed!")
