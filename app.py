@@ -261,6 +261,7 @@ def generate_answer():
 
     with st.spinner("Generating answer..."):
         expanded_queries = generate_explicit_query(query)
+        st.write(expanded_queries)
         try:
             working_dir = Path("./analysis_workspace")
             working_dir.mkdir(parents=True, exist_ok=True)
