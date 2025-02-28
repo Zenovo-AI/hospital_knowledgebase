@@ -204,10 +204,7 @@ def generate_explicit_query(query):
     **5. Supporting Information (if applicable)**  
     - Include any relevant references, compliance requirements, or best practices that support the response.  
     - Ensure that source links are explicitly mentioned. 
-    - HHS HIPAA Guidelines**: [https://www.hhs.gov/hipaa](https://www.hhs.gov/hipaa)  
-    - Official HIPAA Privacy Rule (45 CFR 164.510(b))**: [https://www.ecfr.gov/current/title-45](https://www.ecfr.gov/current/title-45)  
-    - State-Specific Health Laws**: [https://www.ncsl.org/research/health/state-laws.aspx](https://www.ncsl.org/research/health/state-laws.aspx)  
- 
+    
 
     ---
     **Example:**  
@@ -247,9 +244,7 @@ def generate_explicit_query(query):
     **5. Supporting Information:**  
     - Reference standard contract templates from the legal department or industry guidelines.  
     - Review HIPAA compliance checklists for handling patient data.  
-    - HHS HIPAA Compliance Guide**: [https://www.hhs.gov/hipaa](https://www.hhs.gov/hipaa)  
-    - State-Specific Legal Guidelines**: [https://www.ncsl.org/research/health/state-laws.aspx](https://www.ncsl.org/research/health/state-laws.aspx)
-
+    
     ---
     Now, generate an explicit query and structured response for:  
 
@@ -258,6 +253,44 @@ def generate_explicit_query(query):
 
     response = llm.invoke(prompt)
     return response.strip()
+
+
+custom_prompt = """
+You are an expert assistant in hospital policy. Provide detailed and structured answers, ensuring that responses follow this structure:
+
+**1. Summary**  
+**2. Possible Actions**  
+**3. Designation of Representatives**  
+**4. HIPAA Regulations**  
+**5. Sources**  
+
+---Conversation History---  
+{history}  
+
+---Knowledge Base---  
+{context_data}  
+
+---Response Rules---  
+
+- Target format and length: {response_type}  
+- Structure the response as follows:  
+
+  **1. Summary**  
+  - Provide a concise overview of the query, outlining the core issue, objective, or request.  
+
+  **2. Possible Actions**  
+  - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
+
+  **3. Designation of Representatives**  
+  - Clarify roles, responsibilities, and authority delegation in contractual or regulatory contexts.  
+
+  **4. HIPAA Regulations**  
+  - Ensure compliance with HIPAA privacy and security measures when handling sensitive data.  
+
+  **5. Sources**  
+  - Provide references and supporting documents. Ensure links are **clickable**
+
+"""
 
 
 
@@ -270,12 +303,13 @@ def generate_answer():
 
     with st.spinner("Generating answer..."):
         expanded_queries = generate_explicit_query(query)
-        st.write(expanded_queries)
+        full_prompt = f"{custom_prompt}\n\nUser Query: {expanded_queries}"
+        st.write(full_prompt)
         try:
             working_dir = Path("./analysis_workspace")
             working_dir.mkdir(parents=True, exist_ok=True)
             rag = RAGFactory.create_rag(str(working_dir))
-            response = rag.query(expanded_queries, QueryParam(mode="hybrid"))
+            response = rag.query(full_prompt, QueryParam(mode="hybrid"))
             answer = retrieve_answers(expanded_queries)
             if answer:
                 # response = answer["answer"]
