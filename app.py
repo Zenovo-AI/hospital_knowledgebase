@@ -167,7 +167,7 @@ class RAGFactory:
 
 def generate_explicit_query(query):
     """Expands the user query into a detailed and structured response format, incorporating key legal and procedural considerations, with explicit mention of sources and extracted entities."""
-    llm = OpenAI(temperature=0.5)
+    llm = OpenAI(temperature=0)
 
     prompt = f"""
     Given the following user query:
@@ -179,12 +179,12 @@ def generate_explicit_query(query):
     2. Ensure the expanded query covers key aspects relevant to the topic, including legal, procedural, technical, or business-related details.  
     3. Incorporate the designation of representatives, ensuring clarity on roles, responsibilities, and authority in contractual or regulatory contexts.  
     4. If applicable, ensure compliance with **HIPAA regulations**, emphasizing data privacy, security measures, and handling of sensitive information.      
-    7. Make it clear that entities and relationships have already been extracted and will be retrieved as needed.  
+    7. Make it clear that entities and relationships have already been extracted and will be retrieved as needed. DO NOT HALLUCIATE!, IF YOU DO NOT KNOW THE ANSWER KINDLY SAY I DO NOT KNOW CONTACT THE HEALTH DEPARTMENT  
     8. Structure the response into the following standardized format:  
 
     ---
     **1. Summary**  
-    - Provide a concise summary of the generated answer, highlighting the key points and main takeaways. 
+    - Provide a concise overview of the query, outlining the core issue, objective, or request.  
 
     **2. Key Considerations**  
     - Identify important factors, regulations, constraints, or technical requirements that influence the response.  
@@ -217,7 +217,7 @@ def generate_explicit_query(query):
     Structure the response as follows:  
 
     **1. Summary**  
-    - Provide a concise summary of the generated answer, highlighting the key points and main takeaways.
+    - Provide a concise overview of the query, outlining the core issue, objective, or request.  
 
     **2. Possible Actions**  
     - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
@@ -253,12 +253,13 @@ You are an expert assistant in hospital policy. Provide detailed and structured 
 {context_data}  
 
 ---Response Rules---  
+DO NOT HALLUCIATE!, IF YOU DO NOT KNOW THE ANSWER KINDLY SAY I DO NOT KNOW CONTACT THE HEALTH DEPARTMENT
 
 - Target format and length: {response_type}  
 - Structure the response as follows:  
 
   **1. Summary**  
-  - Provide a concise overview of the query, outlining the core issue, objective, or request.  
+  - Provide a concise summary of the generated answer, highlighting the key points and main takeaways.
 
   **2. Possible Actions**  
   - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
