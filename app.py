@@ -167,7 +167,7 @@ class RAGFactory:
 
 def generate_explicit_query(query):
     """Expands the user query into a detailed and structured response format, incorporating key legal and procedural considerations, with explicit mention of sources and extracted entities."""
-    llm = OpenAI(temperature=0.7)
+    llm = OpenAI(temperature=0.5)
 
     prompt = f"""
     Given the following user query:
@@ -178,15 +178,13 @@ def generate_explicit_query(query):
     1. Expand this query into a detailed and explicit version that captures all necessary context, specifications, and considerations.  
     2. Ensure the expanded query covers key aspects relevant to the topic, including legal, procedural, technical, or business-related details.  
     3. Incorporate the designation of representatives, ensuring clarity on roles, responsibilities, and authority in contractual or regulatory contexts.  
-    4. If applicable, ensure compliance with **HIPAA regulations**, emphasizing data privacy, security measures, and handling of sensitive information.  
-    5. The expanded query must explicitly mention relevant sources (documents or links) where the information can be verified.  
-    6. Cite specific individuals or entities mentioned in the stored documents to enhance credibility.  
+    4. If applicable, ensure compliance with **HIPAA regulations**, emphasizing data privacy, security measures, and handling of sensitive information.      
     7. Make it clear that entities and relationships have already been extracted and will be retrieved as needed.  
     8. Structure the response into the following standardized format:  
 
     ---
     **1. Summary**  
-    - Provide a concise overview of the query, outlining the core issue, objective, or request.  
+    - Provide a concise summary of the generated answer, highlighting the key points and main takeaways. 
 
     **2. Key Considerations**  
     - Identify important factors, regulations, constraints, or technical requirements that influence the response.  
@@ -216,34 +214,19 @@ def generate_explicit_query(query):
 
     **Structured Response:**  
 
-    **1. Summary:**  
-    A service contract should clearly define the obligations of both parties, including deliverables, timelines, and compensation, ensuring legal protection for all involved.  
+    Structure the response as follows:  
 
-    **2. Key Considerations:**  
-    - The contract must outline clear payment terms and dispute resolution procedures.  
-    - It should comply with applicable contract law and industry-specific regulations.  
-    - Designated representatives must be identified, including their authority and decision-making responsibilities.  
-    - If handling protected health information (PHI), the contract must include HIPAA compliance terms, such as data security measures, authorized access controls, and Business Associate Agreements (BAA).  
-    - Refer to [Practice_Handbook_CLD.pdf](#) for standard contract language.  
+    **1. Summary**  
+    - Provide a concise summary of the generated answer, highlighting the key points and main takeaways.
 
-    **3. Recommended Actions:**  
-    - Identify the core services and draft a detailed scope of work.  
-    - Specify payment schedules, including advance payments and penalties for late fees.  
-    - Include a termination clause detailing notice periods and conditions for cancellation.  
-    - Clearly outline the roles of designated representatives in contract execution.  
-    - If relevant, ensure the agreement meets HIPAA privacy and security rules.  
+    **2. Possible Actions**  
+    - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
 
-    **4. Potential Challenges & Solutions:**  
-    - **Challenge:** Unclear expectations leading to disputes.  
-      **Solution:** Use precise language to avoid ambiguity.  
-    - **Challenge:** Non-payment issues.  
-      **Solution:** Include clauses for late fees or arbitration.  
-    - **Challenge:** Unauthorized handling of sensitive health data.  
-      **Solution:** Implement strict HIPAA-compliant data access policies and encryption.  
+    **3. Designation of Representatives**  
+    - Clarify roles, responsibilities, and authority delegation in contractual or regulatory contexts.  
 
-    **5. Supporting Information:**  
-    - Reference standard contract templates from the legal department or industry guidelines.  
-    - Review HIPAA compliance checklists for handling patient data.  
+    **4. HIPAA Regulations**  
+    - Ensure compliance with HIPAA privacy and security measures when handling sensitive data.    
     
     ---
     Now, generate an explicit query and structured response for:  
@@ -262,7 +245,6 @@ You are an expert assistant in hospital policy. Provide detailed and structured 
 **2. Possible Actions**  
 **3. Designation of Representatives**  
 **4. HIPAA Regulations**  
-**5. Sources**  
 
 ---Conversation History---  
 {history}  
@@ -286,9 +268,6 @@ You are an expert assistant in hospital policy. Provide detailed and structured 
 
   **4. HIPAA Regulations**  
   - Ensure compliance with HIPAA privacy and security measures when handling sensitive data.  
-
-  **5. Sources**  
-  - Provide references and supporting documents. Ensure links are **clickable**
 
 """
 
