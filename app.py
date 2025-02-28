@@ -166,7 +166,7 @@ class RAGFactory:
 
 
 def generate_explicit_query(query):
-    """Expands the user query into a detailed and structured response format, incorporating key legal and procedural considerations with sources and authoritative references."""
+    """Expands the user query into a detailed and structured response format, incorporating key legal and procedural considerations, with explicit mention of sources and extracted entities."""
     llm = OpenAI(temperature=0.7)
 
     prompt = f"""
@@ -179,9 +179,10 @@ def generate_explicit_query(query):
     2. Ensure the expanded query covers key aspects relevant to the topic, including legal, procedural, technical, or business-related details.  
     3. Incorporate the designation of representatives, ensuring clarity on roles, responsibilities, and authority in contractual or regulatory contexts.  
     4. If applicable, ensure compliance with **HIPAA regulations**, emphasizing data privacy, security measures, and handling of sensitive information.  
-    5. Identify authoritative **persons, organizations, or regulatory bodies** relevant to the topic (e.g., legal experts, government agencies, industry leaders) to enhance credibility.  
-    6. Provide **sources or links** to where the information can be verified, including official documents, laws, research papers, or industry reports.  
-    7. Structure the response into the following standardized format:  
+    5. The expanded query must explicitly mention relevant sources (documents or links) where the information can be verified.  
+    6. Cite specific individuals or entities mentioned in the stored documents to enhance credibility.  
+    7. Make it clear that entities and relationships have already been extracted and will be retrieved as needed.  
+    8. Structure the response into the following standardized format:  
 
     ---
     **1. Summary**  
@@ -191,7 +192,8 @@ def generate_explicit_query(query):
     - Identify important factors, regulations, constraints, or technical requirements that influence the response.  
     - Clarify the designation of representatives, including roles, responsibilities, and authority delegation.  
     - Ensure compliance with HIPAA regulations, where applicable, covering patient data protection, access control, and confidentiality agreements.  
-    - Mention any relevant authoritative sources (e.g., experts, government agencies, research institutions) that provide credible guidance.  
+    - Mention relevant individuals or entities from the extracted data.  
+    - Include references to supporting documents or sources.  
 
     **3. Possible Actions**  
     - Outline the best steps to take based on industry best practices, legal frameworks, or procedural guidelines.  
@@ -199,9 +201,13 @@ def generate_explicit_query(query):
     **4. Potential Challenges & Solutions**  
     - Highlight possible obstacles and suggest ways to mitigate them.  
 
-    **5. Supporting Information & Sources**  
-    - Include references, compliance requirements, legal texts, or best practices that support the response.  
-    - Provide **clickable links** (where applicable) to official documents or reliable sources.  
+    **5. Supporting Information (if applicable)**  
+    - Include any relevant references, compliance requirements, or best practices that support the response.  
+    - Ensure that source links are explicitly mentioned. 
+    - HHS HIPAA Guidelines**: [https://www.hhs.gov/hipaa](https://www.hhs.gov/hipaa)  
+    - Official HIPAA Privacy Rule (45 CFR 164.510(b))**: [https://www.ecfr.gov/current/title-45](https://www.ecfr.gov/current/title-45)  
+    - State-Specific Health Laws**: [https://www.ncsl.org/research/health/state-laws.aspx](https://www.ncsl.org/research/health/state-laws.aspx)  
+ 
 
     ---
     **Example:**  
@@ -209,7 +215,7 @@ def generate_explicit_query(query):
     **User Query:** "How do I draft a service contract?"  
 
     **Expanded Query:**  
-    "What are the essential components of a legally binding service contract, including clauses for scope of work, payment terms, liability, termination, and dispute resolution? How should the contract be structured to comply with relevant laws and industry standards? What are the designated representatives' roles and responsibilities in signing and executing the contract? If handling sensitive healthcare data, how should the contract comply with HIPAA regulations to ensure confidentiality and security? What do legal experts or government agencies recommend as best practices for drafting service contracts?"  
+    "What are the essential components of a legally binding service contract, including clauses for scope of work, payment terms, liability, termination, and dispute resolution? How should the contract be structured to comply with relevant laws and industry standards? What are the designated representatives' roles and responsibilities in signing and executing the contract? If handling sensitive healthcare data, how should the contract comply with HIPAA regulations to ensure confidentiality and security? Refer to [Practice_Handbook_RT.pdf](#) and [Practice_Handbook_LRT.pdf](#) for standard contract structures and compliance requirements. Entities extracted from existing documents, including *John Doe (Legal Advisor)* and *Jane Smith (Compliance Officer)*, will be considered in generating a tailored response."  
 
     **Structured Response:**  
 
@@ -219,16 +225,16 @@ def generate_explicit_query(query):
     **2. Key Considerations:**  
     - The contract must outline clear payment terms and dispute resolution procedures.  
     - It should comply with applicable contract law and industry-specific regulations.  
-    - **Designated representatives** must be identified, including their authority and decision-making responsibilities.  
-    - If handling protected health information (PHI), the contract must include **HIPAA compliance** terms, such as data security measures, authorized access controls, and Business Associate Agreements (BAA).  
-    - **Relevant Authorities:** The **American Bar Association (ABA)** provides guidelines for contract drafting. **The U.S. Department of Health & Human Services (HHS)** oversees HIPAA regulations.  
+    - Designated representatives must be identified, including their authority and decision-making responsibilities.  
+    - If handling protected health information (PHI), the contract must include HIPAA compliance terms, such as data security measures, authorized access controls, and Business Associate Agreements (BAA).  
+    - Refer to [Practice_Handbook_CLD.pdf](#) for standard contract language.  
 
     **3. Recommended Actions:**  
     - Identify the core services and draft a detailed scope of work.  
     - Specify payment schedules, including advance payments and penalties for late fees.  
     - Include a termination clause detailing notice periods and conditions for cancellation.  
-    - Clearly outline the roles of **designated representatives** in contract execution.  
-    - If relevant, ensure the agreement meets **HIPAA privacy and security rules**.  
+    - Clearly outline the roles of designated representatives in contract execution.  
+    - If relevant, ensure the agreement meets HIPAA privacy and security rules.  
 
     **4. Potential Challenges & Solutions:**  
     - **Challenge:** Unclear expectations leading to disputes.  
@@ -238,10 +244,11 @@ def generate_explicit_query(query):
     - **Challenge:** Unauthorized handling of sensitive health data.  
       **Solution:** Implement strict HIPAA-compliant data access policies and encryption.  
 
-    **5. Supporting Information & Sources:**  
-    - **American Bar Association (ABA) Contract Guidelines:** [https://www.americanbar.org](https://www.americanbar.org)  
-    - **HIPAA Compliance Rules (U.S. Department of HHS):** [https://www.hhs.gov/hipaa](https://www.hhs.gov/hipaa)  
-    - **Standard contract templates from legal departments or industry guidelines.**  
+    **5. Supporting Information:**  
+    - Reference standard contract templates from the legal department or industry guidelines.  
+    - Review HIPAA compliance checklists for handling patient data.  
+    - HHS HIPAA Compliance Guide**: [https://www.hhs.gov/hipaa](https://www.hhs.gov/hipaa)  
+    - State-Specific Legal Guidelines**: [https://www.ncsl.org/research/health/state-laws.aspx](https://www.ncsl.org/research/health/state-laws.aspx)
 
     ---
     Now, generate an explicit query and structured response for:  
@@ -251,6 +258,8 @@ def generate_explicit_query(query):
 
     response = llm.invoke(prompt)
     return response.strip()
+
+
 
 
 def generate_answer():
