@@ -284,7 +284,6 @@ def generate_answer():
     with st.spinner("Generating answer..."):
         expanded_queries = generate_explicit_query(query)
         full_prompt = f"{custom_prompt}\n\nUser Query: {expanded_queries}"
-        st.write(full_prompt)
         try:
             working_dir = Path("./analysis_workspace")
             working_dir.mkdir(parents=True, exist_ok=True)
