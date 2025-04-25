@@ -289,10 +289,6 @@ def generate_answer():
             working_dir = Path("./analysis_workspace")
             download_all_files(working_dir)
             rag = RAGFactory.create_rag(str(working_dir))
-
-            for file_path in working_dir.glob("*"):  # This will iterate over all files in the directory
-                if file_path.is_file():  # Ensure we are uploading files, not directories
-                    upload_file(file_path)  # Upload the file to your DigitalOcean Space
                 
             response = rag.query(full_prompt, QueryParam(mode="hybrid"))
             answer = retrieve_answers(expanded_queries)

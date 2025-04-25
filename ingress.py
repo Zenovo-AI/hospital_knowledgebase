@@ -80,6 +80,7 @@ import traceback
 import streamlit as st
 from pathlib import Path
 from db_helper import insert_file_metadata
+from do_spaces import upload_file
 from document_processor import DocumentProcessor
 
 # Initialize document processor
@@ -140,6 +141,10 @@ def ingress_file_doc(file_name: str = None, file_path: str = None, web_links: li
         # ✅ Insert into LightRAG
         rag = RAGFactory.create_rag(str(working_dir))
         rag.insert(text_content)
+
+        for file_path in working_dir.glob("*"):  # This will iterate over all files in the directory
+            if file_path.is_file():  # Ensure we are uploading files, not directories
+                upload_file(file_path)  # Upload the file to your DigitalOcean Space
 
         # ✅ Show success message
         st.success(f"✅ {'File' if file_name else 'Web links'} processed successfully!")
