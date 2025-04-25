@@ -9,6 +9,7 @@ from lightrag.llm.openai import openai_embed, gpt_4o_complete
 from langchain_openai import OpenAI
 from lightrag.utils import EmbeddingFunc
 from db_helper import check_if_file_exists, check_working_directory, delete_file, initialize_database
+from do_spaces import download_all_files, upload_file
 from inference import process_files_and_links, load_or_create_faiss_index, retrieve_answers, clear_faiss_index
 from googleapiclient.discovery import build
 from streamlit_js import st_js, st_js_blocking
@@ -286,8 +287,13 @@ def generate_answer():
         full_prompt = f"{custom_prompt}\n\nUser Query: {expanded_queries}"
         try:
             working_dir = Path("./analysis_workspace")
-            working_dir.mkdir(parents=True, exist_ok=True)
+            download_all_files(working_dir)
             rag = RAGFactory.create_rag(str(working_dir))
+
+            for file_path in working_dir.glob("*"):  # This will iterate over all files in the directory
+                if file_path.is_file():  # Ensure we are uploading files, not directories
+                    upload_file(file_path)  # Upload the file to your DigitalOcean Space
+                
             response = rag.query(full_prompt, QueryParam(mode="hybrid"))
             answer = retrieve_answers(expanded_queries)
             if answer:
