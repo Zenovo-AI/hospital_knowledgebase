@@ -3,6 +3,7 @@ from pathlib import Path
 import sqlite3
 import time
 import numpy as np
+
 import streamlit as st
 from lightrag import LightRAG, QueryParam
 from lightrag.llm.openai import openai_embed, gpt_4o_complete
